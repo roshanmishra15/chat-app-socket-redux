@@ -8,6 +8,7 @@ import connectDb from "./config/db.js";
 import authRoutes from "./Routes/auth.routes.js";
 import messageRoutes from './Routes/message.routes.js'
 import initSocket from "./socket/index.js";
+import uploadRoute from './Routes/upload.routes.js'
 
 dotenv.config();
 
@@ -31,12 +32,13 @@ const io = new Server(server, {
   },
 });
 
+app.use("/uploads", express.static("uploads"));
 /* ================== ROUTES ================== */
 app.get("/", (req, res) => {
   res.send("Hello Roshan");
 });
-
 app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoute);
 app.use("/api/messages", messageRoutes);
 
 /* ================== SOCKET INIT ================== */

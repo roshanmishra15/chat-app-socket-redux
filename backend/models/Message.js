@@ -22,10 +22,24 @@ const MessageSchema = new mongoose.Schema(
       required: true,
     },
 
+    // ✅ TEXT MESSAGE
     content: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
+    },
+
+    // ✅ FILE MESSAGE
+    file: {
+      url: { type: String, default: "" },
+      fileName: { type: String, default: "" },
+      fileType: { type: String, default: "" }, // image/pdf/docx
+    },
+
+    messageType: {
+      type: String,
+      enum: ["text", "file"],
+      default: "text",
     },
 
     delivered: {

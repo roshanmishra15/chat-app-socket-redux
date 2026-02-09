@@ -51,36 +51,44 @@ const initSocket = (io) => {
     });
 
     // ✅ PRIVATE MESSAGE (Sent + Delivered)
-    socket.on("send-private-message", async ({ receiverId, content }) => {
-      try {
-        if (!receiverId || !content) return;
+    socket.on(
+      "send-private-message",
+      async ({ receiverId, content, messageType, fileType, fileName }) => {
+        try {
+          if (!receiverId || !content) return;
 
-        const receiverSocketId = userSocketMap.get(receiverId);
+          const receiverSocketId = userSocketMap.get(receiverId);
 
-        const msg = await Message.create({
-          sender: userId,
-          receiver: receiverId,
-          chatType: "private",
-          content,
-          delivered: receiverSocketId ? true : false,
-          read: false,
-        });
+          const msg = await Message.create({
+            sender: userId,
+            receiver: receiverId,
+            chatType: "private",
+            content,
 
-        const populatedMsg = await Message.findById(msg._id)
-          .populate("sender", "fullname email")
-          .populate("receiver", "fullname email");
+            // ✅ important
+            messageType: messageType || "text",
+            fileType: fileType || null,
+            fileName: fileName || null,
 
-        // send to receiver if online
-        if (receiverSocketId) {
-          io.to(receiverSocketId).emit("new-private-message", populatedMsg);
+            delivered: receiverSocketId ? true : false,
+            read: false,
+          });
+
+          const populatedMsg = await Message.findById(msg._id)
+            .populate("sender", "fullname email")
+            .populate("receiver", "fullname email");
+
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit("new-private-message", populatedMsg);
+          }
+
+          socket.emit("new-private-message", populatedMsg);
+        } catch (error) {
+          console.log("Private Message Error:", error.message);
         }
-
-        // send back to sender
-        socket.emit("new-private-message", populatedMsg);
-      } catch (error) {
-        console.log("Private Message Error:", error.message);
       }
-    });
+    );
+
 
     // ✅ MARK AS DELIVERED (receiver opens chat list / chat)
     socket.on("mark-as-delivered", async ({ senderId }) => {
@@ -110,33 +118,33 @@ const initSocket = (io) => {
     });
 
     socket.on("mark-as-read", async ({ senderId }) => {
-  try {
-    const msgs = await Message.find({
-      sender: senderId,
-      receiver: userId,
-      chatType: "private",
-      read: false,
+      try {
+        const msgs = await Message.find({
+          sender: senderId,
+          receiver: userId,
+          chatType: "private",
+          read: false,
+        });
+
+        const ids = msgs.map((m) => m._id);
+
+        await Message.updateMany(
+          { _id: { $in: ids } },
+          { $set: { read: true, delivered: true } }
+        );
+
+        const senderSocketId = userSocketMap.get(senderId);
+
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("messages-read", {
+            readerId: userId,
+            messageIds: ids,
+          });
+        }
+      } catch (error) {
+        console.log("Mark as read error:", error.message);
+      }
     });
-
-    const ids = msgs.map((m) => m._id);
-
-    await Message.updateMany(
-      { _id: { $in: ids } },
-      { $set: { read: true, delivered: true } }
-    );
-
-    const senderSocketId = userSocketMap.get(senderId);
-
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("messages-read", {
-        readerId: userId,
-        messageIds: ids,
-      });
-    }
-  } catch (error) {
-    console.log("Mark as read error:", error.message);
-  }
-});
 
 
 

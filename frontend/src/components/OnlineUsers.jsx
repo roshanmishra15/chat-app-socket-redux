@@ -3,15 +3,24 @@ import { useDispatch, useSelector } from "react-redux";
 import { setMode } from "../redux/chatSlice";
 import { setSelectedUser } from "../redux/messageSlice";
 
-function OnlineUsers() {
-  const users = useSelector((state) => state.onlineUsers.users);
+function OnlineUsers({ search = "" }) {
+  const users = useSelector((state) => state.onlineUsers.users || []);
   const currentUser = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
 
-  const filteredUsers = users.filter((u) => u._id !== currentUser?.id);
+  const myId = currentUser?._id || currentUser?.id || currentUser?.userId;
+
+  // ✅ remove current user + apply search
+  const filteredUsers = users.filter((u) => {
+    const isNotMe = u._id?.toString() !== myId?.toString();
+    const matchesSearch = u.fullname
+      ?.toLowerCase()
+      .includes(search.toLowerCase());
+
+    return isNotMe && matchesSearch;
+  });
 
   const handleUser = (user) => {
-    console.log("Selected User:", user);
     dispatch(setSelectedUser(user));
     dispatch(setMode("private"));
   };
@@ -32,13 +41,17 @@ function OnlineUsers() {
                        border border-transparent hover:border-blue-200"
           >
             <div className="relative">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 
-                              text-white flex items-center justify-center font-bold text-lg shadow">
+              <div
+                className="w-11 h-11 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 
+                           text-white flex items-center justify-center font-bold text-lg shadow"
+              >
                 {u.fullname?.[0]?.toUpperCase()}
               </div>
 
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 
-                               border-2 border-white rounded-full"></span>
+              <span
+                className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 
+                           border-2 border-white rounded-full"
+              ></span>
             </div>
 
             <div className="flex flex-col">

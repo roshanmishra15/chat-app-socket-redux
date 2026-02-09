@@ -44,14 +44,7 @@ function GlobalChat() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="p-2 rounded-full hover:bg-gray-100 transition">
-            📞
-          </button>
-          <button className="p-2 rounded-full hover:bg-gray-100 transition">
-            ⚙️
-          </button>
-        </div>
+       
       </div>
 
       {/* Messages */}

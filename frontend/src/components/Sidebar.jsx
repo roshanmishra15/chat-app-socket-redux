@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import OnlineUsers from "./OnlineUsers.jsx";
 import RecentChats from "./RecentChats.jsx";
+import ProfileUpload from "./ProfileUpload.jsx"; // ✅ added
 import { useDispatch, useSelector } from "react-redux";
 import { setMode, setRecentChats } from "../redux/chatSlice.jsx";
 import axios from "axios";
@@ -8,18 +9,23 @@ import axios from "axios";
 function Sidebar() {
   const dispatch = useDispatch();
   const mode = useSelector((state) => state.chat.mode);
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("token");
-  const [search,setSearch] = useState("");
 
+  const token =
+    useSelector((state) => state.auth.token) || localStorage.getItem("token");
+
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchRecentChats = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/messages/recent", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await axios.get(
+          "http://localhost:5000/api/messages/recent",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         dispatch(setRecentChats(res.data));
       } catch (error) {
@@ -32,10 +38,10 @@ function Sidebar() {
 
   return (
     <div className="w-72 bg-white border-r flex flex-col shadow-sm">
-      {/* Top Section */}
+      
+      {/* ✅ Profile Upload Section */}
       <div className="p-4 border-b">
-        <h2 className="text-xl font-bold text-gray-800">Chat App</h2>
-        <p className="text-sm text-gray-500">Connect & Chat instantly</p>
+        <ProfileUpload />
       </div>
 
       {/* Search */}
@@ -43,7 +49,7 @@ function Sidebar() {
         <input
           type="text"
           value={search}
-          onChange={(e)=>setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Search users..."
           className="w-full px-3 py-2 rounded-lg border 
                      focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -81,7 +87,7 @@ function Sidebar() {
 
       {/* Recent Chats */}
       <div className="px-4 mt-6">
-        <RecentChats  search = {search}/>
+        <RecentChats search={search} />
       </div>
 
       {/* Online Users */}
